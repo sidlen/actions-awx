@@ -1,0 +1,60 @@
+name: 'Create ip object in netbox'
+description: 'Create ip object in netbox from hosts.json file or output action "Create hosts dict" with hosts dictionary from opentofu state'
+author: 'igoshindi'
+inputs:
+  new_owner:
+    description: 'Active Directory user login'
+    required: false
+    default: "${{ github.actor }}"
+  netbox_url:
+    description: 'http/https netbox url'
+    required: true
+    default: "${{ env.NETBOX_URL }}"
+  netbox_api_token:
+    description: 'Netbox token with write access'
+    required: true
+    default: "${{ secrets.NETBOX_API_TOKEN }}"
+  hosts_data_file_path:
+    description: 'File path to JSON file with hosts dict'
+    required: false
+    default: "hosts.json"
+  hosts_data_json_string:
+    description: 'JSON string with hosts dict'
+    required: false
+  ldap_user:
+    description: 'user for ldap search'
+    required: true
+    default: "${{ vars.LDAP_USER }}"
+  ldap_password:
+    description: 'user`s password'
+    required: true
+    default: "${{ secrets.LDAP_PASSWORD }}"
+  search_base:
+    description: 'search base DN'
+    required: true
+    default: "${{ env.SEARCH_BASE_DN }}"
+  ldap_server:
+    description: 'ldap server endpoint'
+    required: true
+    default: "${{ env.LDAP_SERVER }}"
+  force:
+    description: 'Set to "true/yes" for force replace ip object with new owner'
+    required: false
+    default: 'false'
+
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    NETBOX_API_TOKEN: "${{ inputs.netbox_api_token }}"
+    NETBOX_URL: "${{ inputs.netbox_url }}"
+    AD_USER_LOGIN: "${{ inputs.new_owner }}"
+    HOSTS_DESCRIPTION: "created by action in ${{ github.server_url }}/${{ github.repository }}"
+    HOSTS_FILE_PATH: "${{ inputs.hosts_data_file_path }}"
+    HOSTS_JSON_STRING: "${{ inputs.hosts_data_json_string }}"
+    LDAP_USER: "${{ inputs.ldap_user }}"
+    LDAP_PASSWORD: "${{ inputs.ldap_password }}"
+    LDAP_SEARCH_BASE: "${{ inputs.search_base }}"
+    LDAP_SERVER: "${{ inputs.ldap_server }}"
+    FORCE_FLAG: "${{ inputs.force_flag }}"

@@ -1,0 +1,71 @@
+name: 'Create hosts dict'
+description: 'Create hosts.json file and output with hosts dictionary from opentofu state'
+author: 'igoshindi'
+inputs:
+  state_url:
+    description: 'http/https url (without auntification) with opentofu state content'
+    required: false
+    default: ""
+  state_path:
+    description: 'full local path to file with opentofu state content'
+    required: false
+    default: ""
+  backend_type:
+    description: 'Where to store tofu (terraform) state, use: s3 or consul '
+    required: false
+    default: "consul"
+  s3_address:
+    description: 'S3 server address'
+    required: false
+    default: "${{ env.S3_ADDRESS }}"
+  s3_bucket:
+    description: 'S3 bucket name (required if backend_type is s3)'
+    required: false
+    default: 'opentofu-states'
+  s3_path:
+    description: 'Full path to file without extension (.tfstate) in S3 bucket (required if backend_type is s3)'
+    required: false
+    default: "${{ github.repository }}/${{ env.ENVIRONMENT }}"
+  s3_key:
+    description: 'S3 access key (required if backend_type is s3)'
+    required: false
+    default: "${{ vars.S3_ACCESS_KEY }}"
+  s3_secret:
+    description: 'S3 secret key (required if backend_type is s3)'
+    required: false
+    default: "${{ secrets.S3_SECRET_KEY }}"
+  consul_address:
+    description: 'Consul server address'
+    required: false
+    default: "${{ env.CONSUL_ADDRESS }}"
+  consul_scheme:
+    description: 'Specifies what protocol to use when talking to the given consul_address, either http or https'
+    required: false
+    default: 'https'
+  consul_token:
+    description: 'Consul access token with rw rights'
+    required: false
+    default: "${{ secrets.CONSUL_TOKEN }}"
+  consul_path:
+    description: 'Consul KV path to store state'
+    required: false
+    default: "${{ github.repository }}/${{ env.ENVIRONMENT }}"
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    TOFU_STATE_URL: "${{ inputs.state_url }}"
+    TOFU_STATE_PATH: "${{ inputs.state_path }}"
+    TOFU_STATE_BACKEND_TYPE: "${{ inputs.backend_type }}"
+    TOFU_S3_ADDRESS: "${{ inputs.s3_address }}"
+    TOFU_S3_BUCKET: "${{ inputs.s3_bucket }}"
+    TOFU_S3_PATH: "${{ inputs.s3_path }}"
+    TOFU_S3_KEY: "${{ inputs.s3_key }}"
+    TOFU_S3_SECRET: "${{ inputs.s3_secret }}"
+    TOFU_CONSUL_ADDRESS: "${{ inputs.consul_address }}"
+    TOFU_CONSUL_SCHEME: "${{ inputs.consul_scheme }}"
+    TOFU_CONSUL_TOKEN: "${{ inputs.consul_token }}"
+    TOFU_CONSUL_PATH: "${{ inputs.consul_path }}"
+outputs:
+  result:
+    description: "hosts data"

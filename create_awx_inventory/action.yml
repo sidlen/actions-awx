@@ -1,0 +1,64 @@
+name: 'Create inventory in AWX'
+description: 'Create inventory from hosts.json file or output action "Create hosts dict" with hosts dictionary from opentofu state'
+author: 'igoshindi'
+inputs:
+  hosts_data_file_path:
+    description: 'File path to JSON file with hosts dict'
+    required: false
+    default: "hosts.json"
+  hosts_data_json_string:
+    description: 'JSON string with hosts dict'
+    required: false
+  awx_url:
+    description: 'http/https url AWX server'
+    required: true
+    default: "${{ env.AWX_URL }}"
+  awx_user:
+    description: 'user with write access in AWX'
+    required: true
+    default: "${{ vars.AWX_USER}}"
+  awx_password:
+    description: 'user`s password'
+    required: true
+    default: "${{ secrets.AWX_PASSWORD}}"
+  awx_org:
+    description: 'Organization Name in AWX'
+    required: true
+    default: "${{ env.AWX_ORGANIZATION }}"
+  awx_inventory_name:
+    description: 'Inventory name to be created'
+    required: false
+    default: "${{ github.repository }}"
+  awx_inventory_id:
+    description: 'Inventory id. It`s will be cleared'
+    required: false
+    default: "${{ env.AWX_INVENTORY_ID }}"
+  parent_groups:
+    # example: "parent_group1:group1,hostname_1 parent_group2:group2,group3"
+    description: "String with additional groups to create with relations with another groups and hosts"
+    required: false
+    default: "${{ env.PARENT_GROUPS }}"
+  only_inventory_ini:
+    description: "Flag, set to True for generate only ansible inventory.ini"
+    required: false
+    default: "False"
+  include_disks_uuid:
+    description: "add disks uuid into host_vars"
+    required: false
+    default: "False"
+
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    AWX_URL: "${{ inputs.awx_url }}"
+    AWX_USER: "${{ inputs.awx_user }}"
+    AWX_PASSWORD: "${{ inputs.awx_password }}"
+    AWX_ORG: "${{ inputs.awx_org }}"
+    AWX_INVENTORY_NAME: "${{ inputs.awx_inventory_name }}"
+    AWX_INVENTORY_ID: "${{ inputs.awx_inventory_id }}"
+    HOSTS_FILE_PATH: "${{ inputs.hosts_data_file_path }}"
+    HOSTS_JSON_STRING: "${{ inputs.hosts_data_json_string }}"
+    PARENTS_GROUPS: "${{ inputs.parent_groups }}"
+    FLAG_ONLY_INVENTORY: "${{ inputs.only_inventory_ini }}"
+    INCLUDE_DISKS_UUID: "${{ inputs.include_disks_uuid }}"
