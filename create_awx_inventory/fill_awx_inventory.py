@@ -6,6 +6,7 @@ import time
 import json
 import argparse
 import yaml
+import sys
 
 class Colors:
   HEADER = '\033[95m'  # Фиолетовый
@@ -116,8 +117,10 @@ def main() -> None:
     print(f'id инвентаря = {inventory['id']}')
   else:
     print(f'Обнаружны существующие инвентари с именем {awx_inventory_name}')
+    found_flag = False
     for inventory in inventory_search['results']:
       if inventory['summary_fields']['organization']['id'] == orga.id:
+        found_flag = True
         print(f'...удаление существующих хостов в инвентаре {awx_inventory_name}...')
         while inventory.related.hosts.get()['count'] != 0:
           print(f'удаляется хост {inventory.related.hosts.get()['results'][0]['name']}')
@@ -129,7 +132,11 @@ def main() -> None:
           inventory.related.groups.get()['results'][0].delete()
           print(f'готово')
         current_inventory = inventory
-    inventory = current_inventory
+    if found_flag:    
+      inventory = current_inventory
+    else:
+      print(f'{Colors.FAIL}Инвентарь с именем {awx_inventory_name} найден, но принадлежит другой организации\nПожалуйста смените организацию или имя инвентаря{Colors.ENDC}')
+      sys.exit(1)
     print(f'Инвентарь {inventory['name']} в организации {orga.name} очищен')
     print(f'{Colors.OKGREEN}id инвентаря = {inventory['id']}{Colors.ENDC}')
 
@@ -143,7 +150,7 @@ def main() -> None:
       for disk in host_info['disks']:
         host_vars['disks_uuid'][disk['label']] = f'{disk['controller_type']}-SVMware_Virtual_disk_{disk["uuid"].replace("-","").lower()}'
     hosts[host_name]['variables'] = host_vars
-    host_info['obj'] = api_v2.hosts.create_or_replace(name=host_name, description="added by gitea action", inventory=inventory, variables=host_vars)
+    host_info['obj'] = api_v2.hosts.create(name=host_name, description="added by gitea action", inventory=inventory, variables=host_vars)
 
   createHostVarsFile(hosts)
   
@@ -151,7 +158,7 @@ def main() -> None:
 
   print(f'создание групп в инвентаре')
   for group in groups:
-    groups_obj[group] = api_v2.groups.create_or_replace(name=group, inventory=inventory, description='created by gitea action')
+    groups_obj[group] = api_v2.groups.create(name=group, inventory=inventory, description='created by gitea action')
   print(f'готово')
 
   print(f'создание хостов в инвентаре')
@@ -164,7 +171,7 @@ def main() -> None:
     print(f'генерация словаря с родительскими группами')
     parent_groups = getParentGroups(parents_groups_str, groups, hosts)
     for parent_key in parent_groups.keys():
-      groups_obj[parent_key] = api_v2.groups.create_or_replace(name=parent_key, inventory=inventory, description='created by gitea action')
+      groups_obj[parent_key] = api_v2.groups.create(name=parent_key, inventory=inventory, description='created by gitea action')
     print(f'установка отношений между объектами инвентаря')
     for parent_key, parent_dict in parent_groups.items():
       for group in parent_dict["groups"]:
