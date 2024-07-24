@@ -100,7 +100,7 @@ def extract_host_data(state_file):
               hostname = instance['attributes']['name']
               for net_adapter in instance['attributes']['network']:
                 if net_adapter["connected"]:
-                  ip_address = instance['attributes']['network']['ip']
+                  ip_address = net_adapter['ip']
               if ip_address:
                   hosts_data[hostname] = {
                     'address': ip_address,
