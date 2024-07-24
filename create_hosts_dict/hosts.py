@@ -95,7 +95,25 @@ def extract_host_data(state_file):
                       'size': disk['size'],
                       'controller_type': disk['controller_type']
                     })
-                  
+      elif resource['type'] == 'vcd_vapp_vm' and resource['name'] == 'vm':
+          for instance in resource['instances']:
+              hostname = instance['attributes']['name']
+              for net_adapter in instance['attributes']['network']:
+                if net_adapter["connected"]:
+                  ip_address = instance['attributes']['network']['ip']
+              if ip_address:
+                  hosts_data[hostname] = {
+                    'address': ip_address,
+                    'group': resource['module'].removeprefix('module.'),
+                    'variables': {},
+                    'disks': []
+                  }
+                  for disk in instance['attributes']['internal_disk']:
+                    hosts_data[hostname]['disks'].append({
+                      'unit_number': disk['unit_number'],
+                      'disk_id': disk['disk_id'],
+                      'size_in_mb': disk['size_in_mb']
+                    })
   return hosts_data
 
 def main() -> None:
