@@ -66,4 +66,4 @@ runs:
     PARENTS_GROUPS: "${{ inputs.parent_groups }}"
     FLAG_ONLY_INVENTORY: "${{ inputs.only_inventory_ini }}"
     INCLUDE_DISKS_UUID: "${{ inputs.include_disks_uuid }}"
-    DELETE_FLAG: "${{ inputs.delete_flag }}"
+    DELETE_FLAG: "${{ inputs.delete }}"

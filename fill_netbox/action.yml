@@ -62,4 +62,4 @@ runs:
     LDAP_SEARCH_BASE: "${{ inputs.search_base }}"
     LDAP_SERVER: "${{ inputs.ldap_server }}"
     FORCE_FLAG: "${{ inputs.force_flag }}"
-    DELETE_FLAG: "${{ inputs.delete_flag }}"
+    DELETE_FLAG: "${{ inputs.delete }}"
