@@ -46,6 +46,10 @@ inputs:
     description: "add disks uuid into host_vars"
     required: false
     default: "False"
+  delete:
+    description:  'Set to "true/yes" for remove all objects from awx inventory'
+    required: false
+    default: 'false'
 
 runs:
   using: 'docker'
@@ -62,3 +66,4 @@ runs:
     PARENTS_GROUPS: "${{ inputs.parent_groups }}"
     FLAG_ONLY_INVENTORY: "${{ inputs.only_inventory_ini }}"
     INCLUDE_DISKS_UUID: "${{ inputs.include_disks_uuid }}"
+    DELETE_FLAG: "${{ inputs.delete_flag }}"

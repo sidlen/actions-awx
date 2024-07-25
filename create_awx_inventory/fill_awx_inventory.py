@@ -87,6 +87,8 @@ def main() -> None:
   awx_inventory_name = os.getenv('AWX_INVENTORY_NAME')
   awx_inventory_id = os.getenv('AWX_INVENTORY_ID')
   parents_groups_str = os.getenv('PARENTS_GROUPS')
+  delete_flag = os.getenv('DELETE_FLAG')
+  delete_flag = string_to_bool(delete_flag)
 
   config.base_url = awx_url
   config.credentials = utils.PseudoNamespace({'default': {'username': awx_user, 'password': awx_password}})
@@ -111,10 +113,13 @@ def main() -> None:
   else:
     inventory_search = api_v2.inventory.get(id=awx_inventory_id)
 
-  if inventory_search['count'] < 1:
+  if inventory_search['count'] < 1 and not delete_flag:
     inventory = api_v2.inventory.create_or_replace(name=awx_inventory_name, description="test inventory example", organization=orga)
     print(f'Инвентарь {inventory['name']} в организации {orga.name} создан')
     print(f'id инвентаря = {inventory['id']}')
+  elif delete_flag:
+      print(f'Передан параметр delete на очистку инвентаря. Инвентарь не существует, скрипт завершает работу')
+      sys.exit(0)
   else:
     print(f'Обнаружны существующие инвентари с именем {awx_inventory_name}')
     found_flag = False
@@ -140,6 +145,9 @@ def main() -> None:
     print(f'Инвентарь {inventory['name']} в организации {orga.name} очищен')
     print(f'{Colors.OKGREEN}id инвентаря = {inventory['id']}{Colors.ENDC}')
 
+  if delete_flag:
+    print(f'Передан параметр delete на очистку инвентаря. Инвентарь найден и очищен, скрипт завершает работу')
+    sys.exit(0)
   
   for host_name, host_info in hosts.items():
     host_vars = {"ansible_host": host_info['address']}

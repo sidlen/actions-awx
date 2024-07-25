@@ -1,5 +1,5 @@
-name: 'Create ip object in netbox'
-description: 'Create ip object in netbox from hosts.json file or output action "Create hosts dict" with hosts dictionary from opentofu state'
+name: 'Create/delete ip object in netbox'
+description: 'Create (in default) or delete ip object in netbox from hosts.json file or output action "Create hosts dict" with hosts dictionary from opentofu state'
 author: 'igoshindi'
 inputs:
   new_owner:
@@ -41,6 +41,10 @@ inputs:
     description: 'Set to "true/yes" for force replace ip object with new owner'
     required: false
     default: 'false'
+  delete:
+    description:  'Set to "true/yes" for remove ip objects from netbox'
+    required: false
+    default: 'false'
 
 
 runs:
@@ -58,3 +62,4 @@ runs:
     LDAP_SEARCH_BASE: "${{ inputs.search_base }}"
     LDAP_SERVER: "${{ inputs.ldap_server }}"
     FORCE_FLAG: "${{ inputs.force_flag }}"
+    DELETE_FLAG: "${{ inputs.delete_flag }}"
