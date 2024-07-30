@@ -117,7 +117,7 @@ def main() -> None:
     inventory = api_v2.inventory.create_or_replace(name=awx_inventory_name, description="test inventory example", organization=orga)
     print(f'Инвентарь {inventory['name']} в организации {orga.name} создан')
     print(f'id инвентаря = {inventory['id']}')
-  elif delete_flag:
+  elif inventory_search['count'] < 1 and delete_flag:
       print(f'Передан параметр delete на очистку инвентаря. Инвентарь не существует, скрипт завершает работу')
       sys.exit(0)
   else:
