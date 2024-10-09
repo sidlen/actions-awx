@@ -151,7 +151,7 @@ def main() -> None:
   
   for host_name, host_info in hosts.items():
     host_vars = {"ansible_host": host_info['address']}
-    for var_key, var_value in host_info['variables']:
+    for var_key, var_value in host_info['variables'].items():
       host_vars[var_key] = var_value
     if include_disks_uuid:
       host_vars['disks_uuid'] = {}
@@ -228,7 +228,7 @@ if __name__ == "__main__":
     
     for host_name, host_info in hosts.items():
       host_vars = {"ansible_host": host_info['address']}
-      for var_key, var_value in host_info['variables']:
+      for var_key, var_value in host_info['variables'].items():
         host_vars[var_key] = var_value
       if include_disks_uuid:
         for disk in host_info['disks']:
