@@ -11,9 +11,9 @@ class Colors:
   BOLD = '\033[1m'  # Жирный текст
   UNDERLINE = '\033[4m'  # Подчеркнутый текст
 
-def get_full_name(login, ldap_server, ldap_user, ldap_password, search_base, search_filter):
+def get_email(login, ldap_server, ldap_user, ldap_password, search_base, search_filter):
     """
-    Получает полное имя пользователя из AD по логину.
+    Получает почтовый адрес пользователя из AD по логину.
 
     :param login: Логин пользователя (sAMAccountName).
     :param ldap_server: Адрес сервера LDAP.
@@ -21,19 +21,19 @@ def get_full_name(login, ldap_server, ldap_user, ldap_password, search_base, sea
     :param ldap_password: Пароль для подключения к LDAP.
     :param search_base: Базовый DN для поиска.
     :param search_filter: Фильтр поиска LDAP.
-    :return: Полное имя пользователя или None, если пользователь не найден.
+    :return: почтовый адрес пользователя или 'No Owner', если пользователь не найден.
     """
     server = Server(ldap_server, get_info=ALL)
     with Connection(server, ldap_user, ldap_password) as conn:
         if not conn.bind():
             print('Error in bind', conn.result)
-            return None
-        conn.search(search_base, search_filter.format(login=login), attributes=['cn'])
+            return 'No Owner'
+        conn.search(search_base, search_filter.format(login=login), attributes=['mail'])
         if conn.entries:
-            full_name = conn.entries[0].cn.value
-            return full_name
+            email = conn.entries[0].mail.value
+            return email
         else:
-            return None
+            return 'No Owner'
 
 def createIPObjects(hosts_data: dict, description_host_string, force_flag, netbox_url, netbox_api_token, owner):
   for hostname, data in hosts_data.items():
@@ -55,11 +55,17 @@ def createIPObjects(hosts_data: dict, description_host_string, force_flag, netbo
     check = requests.get(f'{netbox_url}/api/ipam/ip-addresses/?address={data['address']}', headers=headers, verify=False, timeout=5)
     if check.json()['count'] < 1:
       response = requests.post(f'{netbox_url}/api/ipam/ip-addresses/', headers=headers, json=data, verify=False, timeout=5)
-      print(f'{Colors.OKGREEN}Запись {data['address']} создана{Colors.ENDC}')
+      if response.status_code == 200:
+        print(f'{Colors.OKGREEN}Запись {data['address']} создана{Colors.ENDC}')
+      else:
+        print(f'{Colors.FAIL} Error: status code not 200{Colors.ENDC}, json response:\n {response.json()}')
     elif check.json()['count'] == 1:
       if check.json()['results'][0]['custom_fields']['Owner'] == owner or check.json()['results'][0]['custom_fields']['Owner'] is None or force_flag:
         response = requests.patch(f'{netbox_url}/api/ipam/ip-addresses/{check.json()['results'][0]['id']}/', headers=headers, json=data, verify=False, timeout=5)
-        print(f'{Colors.OKBLUE}Запись {data['address']} заменена{Colors.ENDC}')
+        if response.status_code == 200:
+          print(f'{Colors.OKBLUE}Запись {data['address']} заменена{Colors.ENDC}')
+        else:
+          print(f'{Colors.FAIL} Error: status code not 200{Colors.ENDC}, json response:\n {response.json()}')
       else:
         print(f'{Colors.FAIL}Вы не являетесь владельцем записи {data['address']}, замена скриптом отменена, текущий владелец: {check.json()['results'][0]['custom_fields']['Owner']}{Colors.ENDC}')
         sys.exit(1)
@@ -81,7 +87,10 @@ def deleteIPObjects(hosts_data: dict, force_flag, netbox_url, netbox_api_token, 
     elif check.json()['count'] == 1:
       if check.json()['results'][0]['custom_fields']['Owner'] == owner or check.json()['results'][0]['custom_fields']['Owner'] is None or force_flag:
         response = requests.delete(f'{netbox_url}/api/ipam/ip-addresses/{check.json()['results'][0]['id']}/', headers=headers, verify=False, timeout=5)
-        print(f'{Colors.OKGREEN}Запись {data['address']} удалена{Colors.ENDC}')
+        if response.status_code == 200:
+          print(f'{Colors.OKGREEN}Запись {data['address']} удалена{Colors.ENDC}')
+        else:
+          print(f'{Colors.FAIL} Error: status code not 200{Colors.ENDC}, json response:\n {response.json()}')
       else:
         print(f'{Colors.FAIL}Вы не являетесь владельцем записи {data['address']}, замена скриптом отменена, текущий владелец: {check.json()['results'][0]['custom_fields']['Owner']}{Colors.ENDC}')
         sys.exit(1)
@@ -110,7 +119,7 @@ def main() -> None:
   delete_flag = os.getenv('DELETE_FLAG')
   delete_flag = string_to_bool(delete_flag)
   
-  owner = get_full_name(login, ldap_server, ldap_user, ldap_password, search_base, search_filter)
+  owner = get_email(login, ldap_server, ldap_user, ldap_password, search_base, search_filter)
   
   if not hosts_data_json_string:
     file_name = hosts_data_file_path if len(hosts_data_file_path) > 0 else 'hosts.json'
