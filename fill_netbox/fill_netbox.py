@@ -55,16 +55,18 @@ def createIPObjects(hosts_data: dict, description_host_string, force_flag, netbo
     check = requests.get(f'{netbox_url}/api/ipam/ip-addresses/?address={data['address']}', headers=headers, verify=False, timeout=5)
     if check.json()['count'] < 1:
       response = requests.post(f'{netbox_url}/api/ipam/ip-addresses/', headers=headers, json=data, verify=False, timeout=5)
-      if response.status_code == 200:
+      if response.ok:
         print(f'{Colors.OKGREEN}Запись {data['address']} создана{Colors.ENDC}')
       else:
+        print(f'{Colors.FAIL}status code: {response.status_code}{Colors.ENDC}')
         print(f'{Colors.FAIL} Error: status code not 200{Colors.ENDC}, json response:\n {response.json()}')
     elif check.json()['count'] == 1:
       if check.json()['results'][0]['custom_fields']['Owner'] == owner or check.json()['results'][0]['custom_fields']['Owner'] is None or force_flag:
         response = requests.patch(f'{netbox_url}/api/ipam/ip-addresses/{check.json()['results'][0]['id']}/', headers=headers, json=data, verify=False, timeout=5)
-        if response.status_code == 200:
+        if response.ok:
           print(f'{Colors.OKBLUE}Запись {data['address']} заменена{Colors.ENDC}')
         else:
+          print(f'{Colors.FAIL}status code: {response.status_code}{Colors.ENDC}')
           print(f'{Colors.FAIL} Error: status code not 200{Colors.ENDC}, json response:\n {response.json()}')
       else:
         print(f'{Colors.FAIL}Вы не являетесь владельцем записи {data['address']}, замена скриптом отменена, текущий владелец: {check.json()['results'][0]['custom_fields']['Owner']}{Colors.ENDC}')
@@ -87,9 +89,10 @@ def deleteIPObjects(hosts_data: dict, force_flag, netbox_url, netbox_api_token, 
     elif check.json()['count'] == 1:
       if check.json()['results'][0]['custom_fields']['Owner'] == owner or check.json()['results'][0]['custom_fields']['Owner'] is None or force_flag:
         response = requests.delete(f'{netbox_url}/api/ipam/ip-addresses/{check.json()['results'][0]['id']}/', headers=headers, verify=False, timeout=5)
-        if response.status_code == 200:
+        if response.ok:
           print(f'{Colors.OKGREEN}Запись {data['address']} удалена{Colors.ENDC}')
         else:
+          print(f'{Colors.FAIL}status code: {response.status_code}{Colors.ENDC}')
           print(f'{Colors.FAIL} Error: status code not 200{Colors.ENDC}, json response:\n {response.json()}')
       else:
         print(f'{Colors.FAIL}Вы не являетесь владельцем записи {data['address']}, замена скриптом отменена, текущий владелец: {check.json()['results'][0]['custom_fields']['Owner']}{Colors.ENDC}')
