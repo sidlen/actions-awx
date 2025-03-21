@@ -89,6 +89,7 @@ def deleteIPObjects(hosts_data: dict, force_flag, netbox_url, netbox_api_token, 
     elif check.json()['count'] == 1:
       if check.json()['results'][0]['custom_fields']['Owner'] == owner or check.json()['results'][0]['custom_fields']['Owner'] is None or force_flag:
         response = requests.delete(f'{netbox_url}/api/ipam/ip-addresses/{check.json()['results'][0]['id']}/', headers=headers, verify=False, timeout=5)
+        print(response)
         if response.ok:
           print(f'{Colors.OKGREEN}Запись {data['address']} удалена{Colors.ENDC}')
         else:
