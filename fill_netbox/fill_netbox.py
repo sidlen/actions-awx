@@ -94,7 +94,12 @@ def deleteIPObjects(hosts_data: dict, force_flag, netbox_url, netbox_api_token, 
           print(f'{Colors.OKGREEN}Запись {data['address']} удалена{Colors.ENDC}')
         else:
           print(f'{Colors.FAIL}status code: {response.status_code}{Colors.ENDC}')
-          print(f'{Colors.FAIL} Error: status code not 200{Colors.ENDC}, json response:\n {response.json()}')
+          try:
+            print(f'Response content:\n{response.text}')
+            if response.text:
+              print(f'{Colors.FAIL} Error: status code not 200{Colors.ENDC}, json response:\n {response.json()}')
+          except ValueError:
+            print('Response does not contain valid JSON')
       else:
         print(f'{Colors.FAIL}Вы не являетесь владельцем записи {data['address']}, замена скриптом отменена, текущий владелец: {check.json()['results'][0]['custom_fields']['Owner']}{Colors.ENDC}')
         sys.exit(1)
