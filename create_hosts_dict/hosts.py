@@ -32,9 +32,9 @@ def download_state_from_consul(consul_address, consul_scheme, access_token, stat
         obj = json.loads(decoded_data)
     except json.JSONDecodeError:
         with open('terraform_state.json', 'w') as f:
-            f.write(decoded_data)
+            f.write(json.loads(decoded_data))
         print("State file downloaded from Consul")
-        return decoded_data
+        return json.loads(decoded_data)
 
     if 'chunks' in obj:
         chunks = obj['chunks']
@@ -44,12 +44,12 @@ def download_state_from_consul(consul_address, consul_scheme, access_token, stat
             chunk_data = download_chunk(chunk_url, headers)
             full_state += chunk_data
         with open('terraform_state.json', 'w') as f:
-            f.write(full_state)
+            f.write(json.loads(full_state))
         print("State file downloaded from Consul")
-        return full_state
+        return json.loads(full_state)
     else:
         with open('terraform_state.json', 'w') as f:
-            f.write(decoded_data)
+            f.write(json.loads(decoded_data))
         print("State file downloaded from Consul")
         return json.loads(decoded_data)
 
