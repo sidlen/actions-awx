@@ -114,6 +114,12 @@ def extract_host_data(state_file):
                       'disk_id': disk['disk_id'],
                       'size_in_mb': disk['size_in_mb']
                     })
+  for resource in state_file['resources']:
+    if resource['type'] == 'terraform_data' and resource['name'] == 'awx_vars_storage':
+      for instance in resource['instances']:
+        hostname = instance['attributes']['output']['value']['vm_name']
+        if hosts_data[hostname]['address'] == instance['attributes']['output']['value']['vm_ip']:
+          hosts_data[hostname]['variables'].update(instance['attributes']['output']['value'])
   return hosts_data
 
 def main() -> None:
