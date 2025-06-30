@@ -8,6 +8,51 @@ import boto3
 from botocore.client import Config
 
 
+def download_chunk(consul_url, headers):
+    response = requests.get(consul_url, headers=headers)
+    response.raise_for_status()
+    data = response.json()
+    encoded = data[0]['Value']
+    return base64.b64decode(encoded).decode('utf-8')
+
+def download_state_from_consul(consul_address, consul_scheme, access_token, state_key):
+
+    base_url = f"{consul_scheme}://{consul_address}/v1/kv/opentofu/{state_key}.tfstate"
+    headers = {'X-Consul-Token': access_token} if access_token else {}
+
+    response = requests.get(base_url, headers=headers)
+    if response.status_code != 200:
+        print("Failed to download state file from Consul.")
+        exit(1)
+
+    data = response.json()[0]
+    decoded_data = base64.b64decode(data['Value']).decode('utf-8')
+
+    try:
+        obj = json.loads(decoded_data)
+    except json.JSONDecodeError:
+        with open('terraform_state.json', 'w') as f:
+            f.write(decoded_data)
+        print("State file downloaded from Consul")
+        return decoded_data
+
+    if 'chunks' in obj:
+        chunks = obj['chunks']
+        full_state = ''
+        for chunk_key in chunks:
+            chunk_url = f"{consul_scheme}://{consul_address}/v1/kv/{chunk_key}"
+            chunk_data = download_chunk(chunk_url, headers)
+            full_state += chunk_data
+        with open('terraform_state.json', 'w') as f:
+            f.write(full_state)
+        print("State file downloaded from Consul")
+        return full_state
+    else:
+        with open('terraform_state.json', 'w') as f:
+            f.write(decoded_data)
+        print("State file downloaded from Consul")
+        return decoded_data
+
 def getFileFromS3(tofu_state_s3_address, tofu_state_s3_key, tofu_state_s3_secret, tofu_state_s3_bucket, tofu_state_s3_path):
   s3_client = boto3.client(
                             's3',
@@ -66,12 +111,7 @@ def getTFState(
         tofu_state_consul_token,
         tofu_state_consul_path
       ]):
-        headers = {
-          'X-Consul-Token': tofu_state_consul_token
-        }
-        data = requests.get(f'{tofu_state_consul_scheme}://{tofu_state_consul_address}/v1/kv/opentofu/{tofu_state_consul_path}.tfstate', headers=headers)
-        encoded_tofu_state = data.json()[0]['Value']
-        return json.loads(base64.b64decode(encoded_tofu_state).decode('utf-8'))
+        return download_state_from_consul(tofu_state_consul_address, tofu_state_consul_scheme, tofu_state_consul_token, tofu_state_consul_path)
 
 
 def extract_host_data(state_file):
