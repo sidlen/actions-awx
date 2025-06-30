@@ -51,7 +51,7 @@ def download_state_from_consul(consul_address, consul_scheme, access_token, stat
         with open('terraform_state.json', 'w') as f:
             f.write(decoded_data)
         print("State file downloaded from Consul")
-        return decoded_data
+        return json.loads(decoded_data)
 
 def getFileFromS3(tofu_state_s3_address, tofu_state_s3_key, tofu_state_s3_secret, tofu_state_s3_bucket, tofu_state_s3_path):
   s3_client = boto3.client(
