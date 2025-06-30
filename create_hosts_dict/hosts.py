@@ -120,6 +120,9 @@ def extract_host_data(state_file):
         hostname = instance['attributes']['output']['value']['vm_name']
         if hosts_data[hostname]['address'] == instance['attributes']['output']['value']['vm_ip']:
           hosts_data[hostname]['variables'].update(instance['attributes']['output']['value'])
+          del hosts_data[hostname]['variables']['vm_ip']
+          del hosts_data[hostname]['variables']['vm_name']
+          del hosts_data[hostname]['variables']['vm_uuid']
   return hosts_data
 
 def main() -> None:
